@@ -1,0 +1,9 @@
+
+flask==1.1.2
+google-api-python-client
+python-json-logger
+shumway
+jsonschema
+six
+oauth2client
+flask-cors

@@ -1,0 +1,36 @@
+## Copyright 2019 Spotify AB
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##    http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+
+server {
+    listen 8080;
+    server_name localhost;
+
+    error_log stderr info;
+    access_log /dev/stdout;
+
+    index index.html;
+    client_max_body_size 2000M;
+
+    location / {
+        add_header X-Request-Id $reqid;
+        try_files $uri @android-store-service;
+    }
+
+    location @android-store-service {
+        uwsgi_param HTTP_X_REQUEST_ID $reqid;
+        uwsgi_pass unix:///var/run/uwsgi/app/android-store-service/socket;
+        include uwsgi_params;
+        uwsgi_read_timeout 600;
+    }
+}

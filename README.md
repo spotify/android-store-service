@@ -119,12 +119,12 @@ We would really appreciate if you have any improvements that can be added to the
 Make sure to follow the [GitHub Flow Workflow](https://guides.github.com/introduction/flow/):
 
 1. Fork the project
-2. Check out the master branch
+2. Check out the main branch
 3. Create a feature branch
 4. Write code and tests for your change
-5. From your branch, make a pull request against this repos master branch
+5. From your branch, make a pull request against this reposistory's main branch
 6. Work with [repo maintainers](OWNERS.md) to get your change reviewed
-7. Wait for your change to be pulled into the master branch
+7. Wait for your change to be pulled into the main branch
 8. Delete your feature branch
 
 #### Good first issues

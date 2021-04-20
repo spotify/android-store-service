@@ -13,11 +13,11 @@
 # limitations under the License.
 
 
-import json
 import logging
 
 from googleapiclient.errors import HttpError
 
+from android_store_service import exceptions
 from android_store_service.googleplay_build_service import GooglePlayBuildService
 from android_store_service.logic import shared_logic
 
@@ -57,8 +57,8 @@ def upload_apks(package_name, tracks, apks, dry_run):
             google_play_service.commit_edit(edit_id)
     except HttpError as err:
         message = "APK specifies a version code that has already been used."
-        error = json.loads(err.content)["error"]
-        if error["code"] == 403 and error["message"] == message:
+        error = exceptions.parse_httperror(err).get("error", {})
+        if error.get("code") == 403 and error.get("message") == message:
             logging.info(message)
         else:
             raise err

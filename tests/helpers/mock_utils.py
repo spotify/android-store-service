@@ -12,25 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-""" Exceptions for the android-store service """
-import json
-from json import JSONDecodeError
-
-from googleapiclient.errors import HttpError
-from werkzeug.exceptions import NotFound
+class MockGooglePlayResponse(object):
+    def __init__(self, status, reason=None):
+        self.status = status
+        self.reason = reason
 
 
-class NotFoundException(NotFound):
-    pass
-
-
-class BadRequestException(Exception):
-    pass
-
-
-def parse_httperror(error: HttpError) -> dict:
-    try:
-        return json.loads(error.content)
-    except JSONDecodeError:
-        return {"error": {"message": error.content.decode("utf-8")}}
+def mock_httperror_content(code, message):
+    return {"error": {"code": code, "message": message}}

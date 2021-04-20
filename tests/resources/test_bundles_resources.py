@@ -95,6 +95,34 @@ basic_route_params = [
                     "deobfuscation_file": "1248765kjbskdf",
                 }
             ],
+            "tracks": ["alpha"],
+            "dry_run": True,
+        },
+        (
+            "com.package.name",
+            ["alpha"],
+            [
+                {
+                    "sha1": "123",
+                    "sha256": "090290",
+                    "media_body": "ur673462y",
+                    "deobfuscation_file": "1248765kjbskdf",
+                }
+            ],
+            True,
+        ),
+    ),
+    (
+        "/v1/com.package.name/bundles",
+        {
+            "bundles": [
+                {
+                    "sha1": "123",
+                    "sha256": "090290",
+                    "media_body": "ur673462y",
+                    "deobfuscation_file": "1248765kjbskdf",
+                }
+            ],
             "dry_run": False,
         },
         (
@@ -192,6 +220,26 @@ logic_negative_route_params = [
         400,
         "invalid.package does not exist",
     ),
+    (
+        "/v1/com.package.name/bundles",
+        {
+            "tracks": ["alpha-beta"],
+            "bundles": [
+                {
+                    "sha1": "123",
+                    "sha256": "090290",
+                    "media_body": "greatest bundle",
+                    "deobfuscation_file": "1248765kjbskdf",
+                }
+            ],
+        },
+        HttpError(
+            httplib2.Response({"status": 400}),
+            content='{"error":{"message": "track alpha-beta does not exist"}}'.encode(),
+        ),
+        400,
+        "Failed validating 'pattern' in schema['properties']['tracks']['items']",
+    ),
 ]
 
 
@@ -201,6 +249,111 @@ logic_negative_route_params = [
     logic_negative_route_params,
 )
 def test_logic_negative_response(
+    bundles_logic_mock,
+    test_client,
+    route,
+    payload,
+    exp_logic_response,
+    exp_response_code,
+    exp_response_message,
+):
+    bundles_logic_mock.upload_bundles.side_effect = [exp_logic_response]
+    response = test_client.post(route, data=json.dumps(payload))
+    assert response.status_code == exp_response_code
+    assert exp_response_message in json.loads(response.data)["error"]["message"]
+
+
+basic_binary_links_route_params = [
+    (
+        "/v1/com.package.name/bundles_binary_links",
+        {
+            "tracks": ["alpha"],
+            "bundles": [
+                {
+                    "sha256": "090290",
+                    "media_body_link": "http://media_body",
+                    "deobfuscation_file_link": "http://deobfuscation_file",
+                }
+            ],
+        },
+        (
+            "com.package.name",
+            ["alpha"],
+            [
+                {
+                    "sha1": "123",
+                    "sha256": "090290",
+                    "media_body": "ur673462y",
+                    "deobfuscation_file": "1248765kjbskdf",
+                }
+            ],
+            False,
+        ),
+    ),
+]
+
+
+@patch("android_store_service.resources.bundles_resources.bundles_logic")
+@patch("android_store_service.resources.bundles_resources.bundle_adapter")
+@pytest.mark.parametrize("route,payload,exp_params", basic_binary_links_route_params)
+def test_bundles_binary_links_resources(
+    adapt_bundle_mock, bundles_logic_mock, test_client, route, payload, exp_params
+):
+    adapt_bundle_mock.adapt_bundle.return_value = exp_params[2]
+    bundles_logic_mock.upload_bundles.return_value = [123, 123, 123]
+    response = test_client.post(route, data=json.dumps(payload))
+    bundles_logic_mock.upload_bundles.assert_called_once_with(*exp_params)
+    assert response.status_code == 200
+
+
+logic_binary_links_negative_route_params = [
+    (
+        "/v1/invalid.package/bundles_binary_links",
+        {
+            "tracks": ["alpha"],
+            "bundles": [
+                {
+                    "sha256": "090290",
+                    "media_body_link": "greatest bundle",
+                    "deobfuscation_file_link": "1248765kjbskdf",
+                }
+            ],
+        },
+        Exception("Exception"),
+        500,
+        "Exception",
+    ),
+    (
+        "/v1/com.package.name/bundles_binary_links",
+        {
+            "tracks": ["alpha-beta"],
+            "bundles": [
+                {
+                    "sha1": "123",
+                    "sha256": "090290",
+                    "media_body": "greatest bundle",
+                    "deobfuscation_file": "1248765kjbskdf",
+                }
+            ],
+        },
+        HttpError(
+            httplib2.Response({"status": 400}),
+            content='{"error":{"message": "track alpha-beta does not exist"}}'.encode(),
+        ),
+        400,
+        "Failed validating 'pattern' in schema['properties']['tracks']['items']",
+    ),
+]
+
+
+@patch("android_store_service.resources.bundles_resources.bundles_logic")
+@patch("android_store_service.resources.bundles_resources.bundle_adapter")
+@pytest.mark.parametrize(
+    "route,payload,exp_logic_response,exp_response_code,exp_response_message",
+    logic_binary_links_negative_route_params,
+)
+def test_logic_binary_links_negative_response(
+    adapt_bundle_mock,
     bundles_logic_mock,
     test_client,
     route,

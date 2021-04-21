@@ -22,11 +22,14 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from android_store_service.utils import config_utils
 
+_NUM_RETRIES = 3
+
 
 class GooglePlayBuildService:
     def __init__(self, package_name, viewer=False):
         """
         Service for communicating with the Google Play Developer API.
+
         :param package_name: The package name for the app, e.g. com.package.name
         :param viewer: (Optional) True if data will only be viewed (e.g. list tracks),
             False if data will be edited (e.g. upload binary).
@@ -56,7 +59,7 @@ class GooglePlayBuildService:
         edit_request = self.service.edits().insert(
             body={}, packageName=self.package_name
         )
-        result = edit_request.execute()
+        result = edit_request.execute(num_retries=_NUM_RETRIES)
         return result["id"]
 
     def promote_to_track(self, edit_id, version_codes, track):
@@ -70,14 +73,14 @@ class GooglePlayBuildService:
             .update(
                 editId=edit_id, track=track, packageName=self.package_name, body=body
             )
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
 
     def validate_edit(self, edit_id):
         validate_request = (
             self.service.edits()
             .validate(editId=edit_id, packageName=self.package_name)
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
         return validate_request
 
@@ -85,7 +88,7 @@ class GooglePlayBuildService:
         commit_request = (
             self.service.edits()
             .commit(editId=edit_id, packageName=self.package_name)
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
         return commit_request
 
@@ -99,7 +102,7 @@ class GooglePlayBuildService:
                 packageName=self.package_name,
                 media_body=apk_file_path,
             )
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
         return apk_response["versionCode"]
 
@@ -113,7 +116,7 @@ class GooglePlayBuildService:
                 packageName=self.package_name,
                 media_body=bundle_file_path,
             )
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
         return bundle_response["versionCode"]
 
@@ -122,7 +125,7 @@ class GooglePlayBuildService:
             self.service.edits()
             .tracks()
             .list(editId=edit_id, packageName=self.package_name)
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
         return tracks_response["tracks"]
 
@@ -138,6 +141,6 @@ class GooglePlayBuildService:
                 media_mime_type="application/octet-stream",
                 media_body=deobfuscation_file,
             )
-            .execute()
+            .execute(num_retries=_NUM_RETRIES)
         )
         return deobfuscation_response["deobfuscationFile"]

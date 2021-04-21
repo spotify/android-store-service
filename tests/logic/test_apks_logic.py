@@ -19,6 +19,7 @@ import pytest
 from googleapiclient.errors import HttpError
 
 from android_store_service.logic import apks_logic
+from tests.helpers.mock_utils import mock_httperror_content
 
 temp_dir_mock_return_value = "/tmp/foo"
 apk_path_mock = "/tmp/foo/bar.apk"
@@ -166,14 +167,9 @@ upload_apk_exception_params = [
         HttpError(
             {},
             json.dumps(
-                {
-                    "error": {
-                        "code": 404,
-                        "message": (
-                            "APK specifies a version code that has already been used."
-                        ),
-                    }
-                }
+                mock_httperror_content(
+                    404, "APK specifies a version code that has already been used."
+                )
             ).encode("utf-8"),
         )
     ),
@@ -181,17 +177,15 @@ upload_apk_exception_params = [
         HttpError(
             {},
             json.dumps(
-                {
-                    "error": {
-                        "code": 403,
-                        "message": (
-                            "Some other error message but with same status code."
-                        ),
-                    }
-                }
+                mock_httperror_content(
+                    403, "Some other error message but with same status code."
+                )
             ).encode("utf-8"),
         )
     ),
+    (HttpError({}, json.dumps({"foo": "bar"}).encode("utf-8"))),
+    (HttpError({}, "Error is not JSON format".encode("utf-8"))),
+    (HttpError({}, "".encode("utf-8"))),
 ]
 
 
@@ -231,14 +225,9 @@ def test_upload_apk_duplicate(android_store_service_mock, shared_logic_mock):
         HttpError(
             {},
             json.dumps(
-                {
-                    "error": {
-                        "code": 403,
-                        "message": (
-                            "APK specifies a version code that has already been used."
-                        ),
-                    }
-                }
+                mock_httperror_content(
+                    403, "APK specifies a version code that has already been used."
+                )
             ).encode("utf-8"),
         )
     ]

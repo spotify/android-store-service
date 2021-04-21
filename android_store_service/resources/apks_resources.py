@@ -58,7 +58,7 @@ builds_schema = {
         "tracks": {
             "type": "array",
             "minItems": 0,
-            "items": {"type": "string", "pattern": "^[a-zA-Z0-9\:\s]+$"},
+            "items": {"type": "string", "pattern": r"^[a-zA-Z0-9\:\s]+$"},
         },
         "apks": {
             "type": "array",

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 import logging
 import os
 import time
@@ -24,6 +23,7 @@ from googleapiclient.errors import HttpError
 from werkzeug.exceptions import NotFound
 from flask_cors import CORS
 
+from android_store_service import exceptions
 from android_store_service.resources.apks_resources import apks_blueprint
 from android_store_service.resources.builds_resources import builds_blueprint
 from android_store_service.exceptions import BadRequestException
@@ -136,9 +136,9 @@ def handle_bad_request(error):
 
 @app.errorhandler(HttpError)
 def google_api_client_exception(httperror):
-    error = json.loads(httperror.content)["error"]
     logging.exception(httperror)
-    response = flask.jsonify({"error": error})
+    error = exceptions.parse_httperror(httperror)
+    response = flask.jsonify(error)
     response.status_code = httperror.resp.status
     return response
 

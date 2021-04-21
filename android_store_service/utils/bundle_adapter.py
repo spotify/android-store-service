@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2019 Spotify AB
+# Copyright 2021 Spotify AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +12,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-""" Exceptions for the android-store service """
-import json
-from json import JSONDecodeError
-
-from googleapiclient.errors import HttpError
-from werkzeug.exceptions import NotFound
+import base64
+import requests
 
 
-class NotFoundException(NotFound):
-    pass
-
-
-class BadRequestException(Exception):
-    pass
-
-
-def parse_httperror(error: HttpError) -> dict:
-    try:
-        return json.loads(error.content)
-    except JSONDecodeError:
-        return {"error": {"message": error.content.decode("utf-8")}}
+def adapt_bundle(bundles):
+    return [
+        {
+            "sha256": bundle["sha256"],
+            "deobfuscation_file": base64.b64encode(
+                requests.get(bundle["deobfuscation_file_link"]).content
+            ).decode(),
+            "media_body": base64.b64encode(
+                requests.get(bundle["media_body_link"]).content
+            ).decode(),
+        }
+        for bundle in bundles
+    ]

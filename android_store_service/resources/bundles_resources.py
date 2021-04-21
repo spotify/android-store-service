@@ -21,6 +21,7 @@ from jsonschema import ValidationError
 
 from android_store_service.logic import bundles_logic
 from android_store_service.exceptions import BadRequestException
+from android_store_service.utils import bundle_adapter
 
 bundles_blueprint = Blueprint("bundles-blueprint", __name__)
 
@@ -58,7 +59,7 @@ builds_schema = {
         "tracks": {
             "type": "array",
             "minItems": 0,
-            "items": {"type": "string", "pattern": "^[a-zA-Z0-9\:\s]+$"},
+            "items": {"type": "string", "pattern": r"^[a-zA-Z0-9\:\s]+$"},
         },
         "bundles": {
             "type": "array",
@@ -70,6 +71,59 @@ builds_schema = {
                     "sha1": {"type": "string"},
                     "sha256": {"type": "string"},
                     "media_body": {"type": "string"},
+                    "deobfuscation_file": {"type": "string"},
+                },
+            },
+        },
+        "dry_run": {"type": "boolean"},
+    },
+}
+
+
+@bundles_blueprint.route("/<package_name>/bundles_binary_links", methods=["POST"])
+def upload_bundles_binary_links(package_name):
+    if not re.match(r"^[a-zA-Z0-9\.]+$", package_name):
+        raise BadRequestException("Invalid package name")
+
+    data = request.get_json(force=True)
+    try:
+        jsonschema.validate(data, builds_schema_binary_builds)
+    except ValidationError as e:
+        raise BadRequestException(str(e))
+
+    tracks = data.get("tracks", [])
+    dry_run = data.get("dry_run", False)
+
+    bundles = bundle_adapter.adapt_bundle(data.get("bundles"))
+    version_codes = bundles_logic.upload_bundles(package_name, tracks, bundles, dry_run)
+    logging.info(
+        f"Successfully uploaded new bundles for {package_name} to Google Play."
+        f'Tracks: {", ".join(tracks)}. '
+        f'Version codes: {", ".join(str(x) for x in version_codes)}'
+    )
+    return jsonify(version_codes)
+
+
+builds_schema_binary_builds = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Upload bundles to google play schema",
+    "type": "object",
+    "required": ["bundles"],
+    "properties": {
+        "tracks": {
+            "type": "array",
+            "minItems": 0,
+            "items": {"type": "string", "pattern": r"^[a-zA-Z0-9\:\s]+$"},
+        },
+        "bundles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": ["sha256", "media_body_link"],
+                "properties": {
+                    "sha256": {"type": "string"},
+                    "media_body_link": {"type": "string"},
                     "deobfuscation_file": {"type": "string"},
                 },
             },

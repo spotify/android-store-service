@@ -21,7 +21,6 @@ import shumway
 from flask import request, g
 from googleapiclient.errors import HttpError
 from werkzeug.exceptions import NotFound
-from flask_cors import CORS
 
 from android_store_service import exceptions
 from android_store_service.resources.apks_resources import apks_blueprint
@@ -34,7 +33,6 @@ from android_store_service.resources.tracks_resources import tracks_blueprint
 GIGA_UNIT = 1e9
 
 app = flask.Flask(__name__)
-CORS(app)
 
 try:
     app.config.from_envvar("APP_CONFIG_FILE")

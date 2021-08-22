@@ -67,10 +67,10 @@ RUN python3.6 -m venv /usr/src/app/.venv
 
 # https://github.com/GoogleCloudPlatform/google-cloud-python/issues/2990
 RUN mkdir -p /var/log/supervisord
-RUN /usr/src/app/.venv/bin/pip install --upgrade setuptools
-RUN /usr/src/app/.venv/bin/pip install wheel
-RUN /usr/src/app/.venv/bin/pip install -r requirements.txt -i https://pypi.org/simple
-RUN /usr/src/app/.venv/bin/pip install uwsgi
+RUN /usr/src/app/.venv/bin/pip install --no-cache-dir --upgrade setuptools
+RUN /usr/src/app/.venv/bin/pip install --no-cache-dir wheel
+RUN /usr/src/app/.venv/bin/pip install --no-cache-dir -r requirements.txt -i https://pypi.org/simple
+RUN /usr/src/app/.venv/bin/pip install --no-cache-dir uwsgi
 
 # Copy app code
 COPY android_store_service /usr/src/app/android_store_service
